@@ -1,6 +1,5 @@
 import most_visited_sequence as mvs
 
-
 sample = ["T0,C1,A"
           "T0,C2,E"
           "T1,C1,B"
@@ -30,3 +29,7 @@ def test_site_parser():
     assert mvs.site_parser.parse("A") == "A"
     assert mvs.site_parser.parse("Ab^728%Q($)") == "Ab^728%Q($)"
     assert mvs.site_parser.parse("bih") == "bih"
+
+
+def test_entry_parser():
+    assert mvs.entry_parser.parse("T0,C1,A") == [0, 1, "A"]
