@@ -23,3 +23,10 @@ def test_time_parser():
 def test_id_parser():
     assert mvs.id_parser.parse("C1") == 1
     assert mvs.id_parser.parse("C9") == 9
+    assert mvs.id_parser.parse("C980") == 980
+
+
+def test_site_parser():
+    assert mvs.site_parser.parse("A") == "A"
+    assert mvs.site_parser.parse("Ab^728%Q($)") == "Ab^728%Q($)"
+    assert mvs.site_parser.parse("bih") == "bih"

@@ -1,4 +1,7 @@
 import parsy as p
 
-time_parser = p.string("T") >> p.regex(r'\d+').map(int)
-id_parser = p.string("C") >> p.digit.map(int)
+number_parser = p.regex(r'\d+').map(int)
+time_parser = p.string("T") >> number_parser
+id_parser = p.string("C") >> number_parser
+site_parser = p.regex(r'.*')
+
