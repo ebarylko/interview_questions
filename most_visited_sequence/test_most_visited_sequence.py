@@ -1,3 +1,6 @@
+import most_visited_sequence as mvs
+
+
 sample = ["T0,C1,A"
           "T0,C2,E"
           "T1,C1,B"
@@ -8,3 +11,8 @@ sample = ["T0,C1,A"
           "T3,C2,D"
           "T4,C1,E"
           "T5,C2,A"]
+
+
+def test_time_parser():
+    assert mvs.time_parser.parse("T0") == 0
+    assert mvs.time_parser.parse("T1") == 1
