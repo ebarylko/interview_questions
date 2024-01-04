@@ -16,3 +16,10 @@ sample = ["T0,C1,A"
 def test_time_parser():
     assert mvs.time_parser.parse("T0") == 0
     assert mvs.time_parser.parse("T1") == 1
+    assert mvs.time_parser.parse("T12") == 12
+    assert mvs.time_parser.parse("T1292") == 1292
+
+
+def test_id_parser():
+    assert mvs.id_parser.parse("C1") == 1
+    assert mvs.id_parser.parse("C9") == 9
