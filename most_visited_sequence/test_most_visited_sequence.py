@@ -11,6 +11,38 @@ sample = ["T0,C1,A",
           "T4,C1,E",
           "T5,C2,A"]
 
+sample_2 = ["T0,C1,A",
+            "T0,C2,E",
+            "T1,C1,B",
+            "T1,C2,B",
+            "T2,C1,C",
+            "T2,C2,C",
+            "T3,C1,D",
+            "T3,C2,D",
+            "T4,C1,E",
+            "T5,C2,A",
+            "T6,C2,B",
+            "T7,C2,C"]
+
+sample_3 = ["T0,C3,A"]
+
+sample_4 = ["T0,C1,A",
+            "T0,C2,E",
+            "T0,C3,Q",
+            "T0,C4,Q",
+            "T1,C1,B",
+            "T1,C2,B",
+            "T1,C3,R",
+            "T1,C4,R",
+            "T2,C1,C",
+            "T2,C2,C",
+            "T2,C3,S",
+            "T2,C4,S",
+            "T3,C1,D",
+            "T3,C2,D",
+            "T4,C1,E",
+            "T5,C2,A"]
+
 
 def test_time_parser():
     assert mvs.time_parser.parse("T0") == 0
@@ -35,9 +67,20 @@ def test_entry_parser():
     assert mvs.entry_parser.parse("T0,C1,A") == [0, 1, "A"]
 
 
+def test_entry_parser_2():
+    assert mvs.entry_parser_2("T0,C1,A") == [0, 1, "A"]
+
+
+def test_parse_input_2():
+    assert mvs.parse_input_2(["T0,C1,A", "T9,C12,BDI"]) == [[0, 1, "A"], [9, 12, "BDI"]]
+
+
 def test_parse_input():
     assert mvs.parse_input(["T0,C1,A", "T9,C12,BDI"]) == [[0, 1, "A"], [9, 12, "BDI"]]
 
 
 def test_most_visited_sequence():
     assert mvs.most_visited_sequence(sample) == ("B", "C", "D")
+    assert mvs.most_visited_sequence(sample_2) == ("A", "B", "C")
+    assert not mvs.most_visited_sequence(sample_3)
+    assert mvs.most_visited_sequence(sample_4) == ("B", "C", "D")
