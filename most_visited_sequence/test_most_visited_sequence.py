@@ -1,14 +1,14 @@
 import most_visited_sequence as mvs
 
-sample = ["T0,C1,A"
-          "T0,C2,E"
-          "T1,C1,B"
-          "T1,C2,B"
-          "T2,C1,C"
-          "T2,C2,C"
-          "T3,C1,D"
-          "T3,C2,D"
-          "T4,C1,E"
+sample = ["T0,C1,A",
+          "T0,C2,E",
+          "T1,C1,B",
+          "T1,C2,B",
+          "T2,C1,C",
+          "T2,C2,C",
+          "T3,C1,D",
+          "T3,C2,D",
+          "T4,C1,E",
           "T5,C2,A"]
 
 
@@ -33,3 +33,11 @@ def test_site_parser():
 
 def test_entry_parser():
     assert mvs.entry_parser.parse("T0,C1,A") == [0, 1, "A"]
+
+
+def test_parse_input():
+    assert mvs.parse_input(["T0,C1,A", "T9,C12,BDI"]) == [[0, 1, "A"], [9, 12, "BDI"]]
+
+
+def test_most_visited_sequence():
+    assert mvs.most_visited_sequence(sample) == ("B", "C", "D")
