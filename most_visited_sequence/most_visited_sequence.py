@@ -29,9 +29,10 @@ def most_visited_sequence(input):
         input,
         parse_input,
         (tz.groupby, tz.second),
+        (tz.valmap, tz.compose(list, tz.partial(map, tz.partial(tz.nth, 2)))),
         op.methodcaller("values"),
+        list,
+        (map, tz.compose(list, tz.partial(tz.sliding_window, 3))),
         list
-
-        # (map, sites_visited)
-
     )
+
