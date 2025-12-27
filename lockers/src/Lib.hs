@@ -1,11 +1,11 @@
 module Lib
-    ( someFunc, createNLockers
+    ( createNLockers, toLocker
     ) where
 
 import Data.Map (Map)
 import qualified Data.Map as Map
 
-newtype Positive = Positive { unPositive :: Int } 
+newtype Positive = Positive { unPositive :: Int } deriving (Eq, Ord, Show)
 
 toPositive :: Int -> Maybe Positive
 toPositive n = if (n <= 0) then Nothing else Just (Positive n)
@@ -17,27 +17,37 @@ getPositive :: Positive -> Int
 getPositive = unPositive
 
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
-
 type LockerId = Positive
 
-data LockerSize = Tiny | Small | Medium | Large | ExtraLarge  
+data LockerSize = Tiny | Small | Medium | Large | ExtraLarge  deriving (Eq, Ord, Show, Enum)
 
 data Locker = Locker {
-  id:: LockerId,
-  size:: LockerSize}
+  uid:: LockerId,
+  size:: LockerSize} deriving (Eq, Show)
 
+unsafeToLockerId :: Int -> LockerId
+
+unsafeToLockerId = fromJust . toPositive
+
+unsafeToLocker:: Int -> LockerSize -> Maybe Locker
+
+-- Takes a potentially valid id, a locker size, and returns a locker with the given id and size
+-- if the id is valid. Returns None otherwise
+unsafeToLocker potentialId size = (\newId -> Locker{uid=newId, size=size})  <$> toPositive potentialId
+
+
+  {- This data type represents the remaining lockers available in a warehouse,
+where the lockers come in five different sizes. 
+-}
 data Lockers = Lockers {
   idToLocker:: Map LockerId Locker,
-  lockerSizeToLockers:: Map LockerSize [Locker],
-  isValidLockerId:: LockerId -> Bool} 
+  lockerSizeToLockers:: Map LockerSize [Locker]}  deriving (Eq, Show)
 
 {- Takes a positive number n and creates n lockers with the sizes of the
 lockers being either tiny, small, medium, large, or extra large
 -}
 createNLockers:: Positive -> Lockers
 
-createNLockers numOfLockers = Lockers Map.empty Map.empty (const True)
+createNLockers numOfLockers = Lockers Map.empty Map.empty 
 
 
