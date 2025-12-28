@@ -2,7 +2,7 @@ import Test.Hspec
 
 import qualified Data.Map as Map
 
-import Lib (createNLockers, Lockers(..), Locker(..), LockerId, LockerSize(..),  toPositive, unsafeToLocker, unsafeToLockerId, idToLocker, lockerSizeToLockers)
+import Lib (createNLockers, Lockers(..), LockerSize(..),  toPositive, unsafeToLocker, unsafeToLockerId, idToLocker, lockerSizeToLockers)
 
 main :: IO ()
 
@@ -33,4 +33,3 @@ main = hspec $ do
 
 
         (fmap createNLockers (toPositive 6)) `shouldBe` Just expected
-

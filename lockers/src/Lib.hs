@@ -30,12 +30,10 @@ unsafeToLockerId :: Int -> LockerId
 
 unsafeToLockerId = fromJust . toPositive
 
-unsafeToLocker:: Int -> LockerSize -> Maybe Locker
+unsafeToLocker:: Int -> LockerSize -> Locker
 
--- Takes a potentially valid id, a locker size, and returns a locker with the given id and size
--- if the id is valid. Returns None otherwise
-unsafeToLocker potentialId size = (\newId -> Locker{uid=newId, size=size})  <$> toPositive potentialId
-
+-- Takes an id which is known to be valid, a locker size, and returns a locker with the given id and size
+unsafeToLocker idVal size = Locker{uid=(fromJust . toPositive) idVal, size=size}  
 
   {- This data type represents the remaining lockers available in a warehouse,
 where the lockers come in five different sizes. 
