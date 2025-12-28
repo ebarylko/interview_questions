@@ -1,7 +1,8 @@
 module Lib
-    ( createNLockers, toLocker
+    ( createNLockers, unsafeToLocker, LockerId, Lockers(..), Locker, LockerSize(..), unsafeToLockerId, toPositive
     ) where
 
+import Data.Maybe (fromJust)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
