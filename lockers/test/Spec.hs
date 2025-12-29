@@ -2,7 +2,9 @@ import Test.Hspec
 
 import qualified Data.Map as Map
 
-import Lib (createNLockers, Lockers(..), LockerSize(..),  toPositive, unsafeToLocker, unsafeToLockerId, idToLocker, lockerSizeToLockers)
+import Data.Maybe (mapMaybe)
+
+import Lib (createNLockers, Lockers(..), LockerSize(..),  toPositive, unsafeToLocker, unsafeToLockerId, idToLocker, lockerSizeToLockers, toLockerIds, toLocker)
 
 main :: IO ()
 
@@ -10,17 +12,12 @@ main :: IO ()
 main = hspec $ do
   context "Lockers" $ do
     describe "When creating six lockers" $ do
-      it "Two extra small lockers and one locker of every other size will ge generated" $ do
+      it "Two tiny lockers and one locker of every other size will be generated" $ do
         let expected = Lockers { idToLocker =
                                  Map.fromList 
                                  (zip
-                                  (map unsafeToLockerId [1 .. 6])
-                                  [ unsafeToLocker 1 Tiny,
-                                    unsafeToLocker 2 Small,
-                                    unsafeToLocker 3 Medium,
-                                    unsafeToLocker 4 Large,
-                                    unsafeToLocker 5 ExtraLarge,
-                                    unsafeToLocker 6 Tiny]),
+                                  (toLockerIds [1 .. 6])
+                                  (mapMaybe (uncurry toLocker) (zip [1..6]  (cycle [Tiny .. ExtraLarge])))),
                                  lockerSizeToLockers =
                                  Map.fromList
                                  [ (Tiny, [unsafeToLocker 1 Tiny, unsafeToLocker 6 Tiny])
@@ -32,4 +29,4 @@ main = hspec $ do
                                }
 
 
-        (fmap createNLockers (toPositive 6)) `shouldBe` Just expected
+        fmap createNLockers (toPositive 6) `shouldBe` Just expected

@@ -1,8 +1,8 @@
 module Lib
-    ( createNLockers, unsafeToLocker, LockerId, Lockers(..), Locker, LockerSize(..), unsafeToLockerId, toPositive
+    ( createNLockers, unsafeToLocker, LockerId, Lockers(..), Locker, LockerSize(..), unsafeToLockerId, toPositive, toLockerIds, toLocker
     ) where
 
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, mapMaybe)
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -26,9 +26,28 @@ data Locker = Locker {
   uid:: LockerId,
   size:: LockerSize} deriving (Eq, Show)
 
+
+{- Takes a number that potentially represents a valid id, a locker size, and
+attempts to construct a locker from the given arguments. Returns None if the number does
+not represent a valid id.
+-}
+  
+toLocker :: Int -> LockerSize -> Maybe Locker
+
+toLocker potentialId sze =  Locker <$> toPositive potentialId <*> pure sze
+
 unsafeToLockerId :: Int -> LockerId
 
 unsafeToLockerId = fromJust . toPositive
+
+  {- Takes a collection of numbers that may represent a valid id for a locker and
+returns only the numbers that are valid ids
+-}
+toLockerIds :: [Int] -> [LockerId]
+
+toLockerIds =  mapMaybe toPositive
+
+
 
 unsafeToLocker:: Int -> LockerSize -> Locker
 
