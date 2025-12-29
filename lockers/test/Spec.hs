@@ -2,13 +2,11 @@ import Test.Hspec
 
 import qualified Data.Map as Map
 
-import Data.Maybe (mapMaybe, catMaybes)
-
-import Data.List (singleton)
+import Data.Maybe (catMaybes)
 
 import Data.Function ((&))
 
-import Lib (createNLockers, Lockers(..), LockerSize(..),  toPositive, idToLocker, lockerSizeToLockers, toLockerIds, toLocker)
+import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, idToLocker, lockerSizeToLockers, toLockerIds, toLocker)
 
 main :: IO ()
 
@@ -24,8 +22,8 @@ main = hspec $ do
                                   (toLockerIds [1 .. 6])
                                   expectedLockers),
                                  lockerSizeToLockers =
-                                 Map.fromListWith (++)
-                                 (zip (cycle [Tiny .. ExtraLarge]) (map singleton expectedLockers))
+                                 Map.fromListWith (++) $
+                                 map (\locker -> (size locker, [locker])) expectedLockers
                                }
 
 

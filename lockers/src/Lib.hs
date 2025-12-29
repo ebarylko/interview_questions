@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker
+    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size
     ) where
 
 import Data.Maybe (fromJust, mapMaybe)
