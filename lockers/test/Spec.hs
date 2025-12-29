@@ -2,9 +2,11 @@ import Test.Hspec
 
 import qualified Data.Map as Map
 
-import Data.Maybe (mapMaybe)
+import Data.Maybe (mapMaybe, catMaybes)
 
 import Data.List (singleton)
+
+import Data.Function ((&))
 
 import Lib (createNLockers, Lockers(..), LockerSize(..),  toPositive, idToLocker, lockerSizeToLockers, toLockerIds, toLocker)
 
