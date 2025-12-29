@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, unsafeToLocker, LockerId, Lockers(..), Locker, LockerSize(..), unsafeToLockerId, toPositive, toLockerIds, toLocker
+    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker
     ) where
 
 import Data.Maybe (fromJust, mapMaybe)
@@ -36,9 +36,6 @@ toLocker :: Int -> LockerSize -> Maybe Locker
 
 toLocker potentialId sze =  Locker <$> toPositive potentialId <*> pure sze
 
-unsafeToLockerId :: Int -> LockerId
-
-unsafeToLockerId = fromJust . toPositive
 
   {- Takes a collection of numbers that may represent a valid id for a locker and
 returns only the numbers that are valid ids
@@ -47,12 +44,6 @@ toLockerIds :: [Int] -> [LockerId]
 
 toLockerIds =  mapMaybe toPositive
 
-
-
-unsafeToLocker:: Int -> LockerSize -> Locker
-
--- Takes an id which is known to be valid, a locker size, and returns a locker with the given id and size
-unsafeToLocker idVal size = Locker{uid=(fromJust . toPositive) idVal, size=size}  
 
   {- This data type represents the remaining lockers available in a warehouse,
 where the lockers come in five different sizes. 
