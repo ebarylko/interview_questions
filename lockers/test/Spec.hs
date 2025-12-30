@@ -3,13 +3,16 @@ import Test.Hspec
 import qualified Data.Map as Map
 
 import Data.Maybe (catMaybes)
-import Data.Set (singleton, union)
+import Data.Set (singleton, union, empty)
+import qualified Data.List as List
+import Control.Applicative (liftA2)
 
 import Data.Function ((&))
 
 import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, toLockerIds, toLocker, requestLocker)
 
 lockers = toPositive
+toLockerId = toPositive
 
 main :: IO ()
 
@@ -33,5 +36,10 @@ main = hspec $ do
         (lockers 3 >>= requestLocker Large . createNLockers) `shouldBe` Nothing
 
     describe "When requesting a locker in a size that is available" $ do
-      it "A locker id corresponding to an unused locker is returned" $ do
-        pending
+      it "A locker id corresponding to an unused locker is returned and the updated locker store notes that this locker is in use" $ do
+        let expectedLocker = toLocker 1 Tiny 
+        let expectedId = toLockerId 1
+
+        let expectedLockers = fmap (flip Lockers (Map.fromList [(Tiny, empty)])   . Map.fromList . List.singleton.  liftA2 (,)) expectedId expectedLocker
+
+        (lockers 1 >>= requestLocker Tiny . createNLockers) `shouldBe` liftA2 (,) expectedLockers expectedId

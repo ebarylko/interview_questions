@@ -3,6 +3,7 @@ module Lib
     ) where
 
 import qualified Data.Set as Set 
+import Data.Set (findMin)
 import Data.Function (on, (&))
 import Data.Maybe (mapMaybe)
 import Data.Map (Map, lookup)
@@ -86,11 +87,13 @@ createNLockers numOfLockers =  initLockers .
     allSizes = [Tiny .. ExtraLarge]
     lockerData = zip [1 .. getPositive numOfLockers] (cycle allSizes)
 
+type LockersUpdate a = (Lockers, a)
+
 {-
 Takes the size of a package, information about available lockers, and returns the id of the first locker that
 is of the same size as the package. Returns none if no such lockers are available.
 -}
-requestLocker :: LockerSize -> Lockers -> Maybe LockerId
+requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
 
 --requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
 
@@ -100,12 +103,12 @@ filterMaybe pred m = m >>= (\v -> if pred v then Just v else Nothing)
 
 toLockerId maybeId = (head. toLockerIds) [maybeId]
 
-requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap (const (toLockerId 3))
+emptyLockers = Lockers Map.empty Map.empty
 
+requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap ((,) emptyLockers . uid . findMin)  
 
 -- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
 
--- type LockersUpdate a = (Lockers, a)
 
 -- addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
 
