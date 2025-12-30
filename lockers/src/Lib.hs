@@ -77,7 +77,12 @@ isSameSize = (==) `on` size
 lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size
 
 
-createNLockers numOfLockers = uncurry Lockers . (lockersToAvailabilityTracker &&& lockersToSizeTracker) . mapMaybe (uncurry toLocker) $ zip [1 .. getPositive numOfLockers] (cycle allSizes)  where allSizes = [Tiny .. ExtraLarge]
+createNLockers numOfLockers = uncurry Lockers .
+  (lockersToAvailabilityTracker &&& lockersToSizeTracker)
+  . mapMaybe (uncurry toLocker) $
+  zip [1 .. getPositive numOfLockers] (cycle allSizes)
+  where
+    allSizes = [Tiny .. ExtraLarge]
 
 {-
 Takes the size of a package, information about available lockers, and returns the id of the first locker that
@@ -86,3 +91,17 @@ is of the same size as the package. Returns none if no such lockers are availabl
 requestLocker :: LockerSize -> Lockers -> Maybe LockerId
 
 requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
+ 
+
+
+data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
+
+type LockersUpdate a = (Lockers, a)
+
+addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
+
+data LockerRemovalError = InvalidRemoval LockerId | NotInUse
+
+removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
+
+
