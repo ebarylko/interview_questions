@@ -40,7 +40,15 @@ main = hspec $ do
         let expectedLocker = toLocker 1 Tiny 
         let expectedId = toLockerId 1
 
-        let expectedLockers =  flip Lockers (Map.fromList [(Tiny, empty)])  . Map.fromList . List.singleton <$>  liftA2 (,) expectedId expectedLocker
+        -- let expectedLockers =  Lockers
+        -- liftA2 Map.singleton expectedId expectedLocker
+        -- Map.singleton Tiny empty
+
+        let expectedLockers = do
+              lId <- expectedId
+              loc <- expectedLocker
+              pure $ Lockers (Map.singleton lId loc)
+                            (Map.singleton Tiny empty)
 
         (lockers 1 >>= requestLocker Tiny . createNLockers) `shouldBe` liftA2 (,) expectedLockers expectedId
 
