@@ -2,14 +2,19 @@ module Lib
     ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size
     ) where
 
-import Data.Maybe (fromJust, mapMaybe)
+import qualified Data.Set as Set 
+import Data.Function ((&))
+import Data.Maybe (fromJust, mapMaybe, catMaybes)
 import Data.Map (Map)
+import Data.List (cycle, sortBy, groupBy, sortOn)
 import qualified Data.Map as Map
+import Control.Arrow ((&&&))
+
 
 newtype Positive = Positive { unPositive :: Int } deriving (Eq, Ord, Show)
 
 toPositive :: Int -> Maybe Positive
-toPositive n = if (n <= 0) then Nothing else Just (Positive n)
+toPositive n = if n <= 0 then Nothing else Just (Positive n)
 
 -- We can't export unPositive, because unPositive can be used
 -- to update the field.  Trivially renaming it to getPositive
@@ -24,7 +29,7 @@ data LockerSize = Tiny | Small | Medium | Large | ExtraLarge  deriving (Eq, Ord,
 
 data Locker = Locker {
   uid:: LockerId,
-  size:: LockerSize} deriving (Eq, Show)
+  size:: LockerSize} deriving (Eq, Show, Ord)
 
 
 {- Takes a number that potentially represents a valid id, a locker size, and
@@ -46,17 +51,32 @@ toLockerIds =  mapMaybe toPositive
 
 
   {- This data type represents the remaining lockers available in a warehouse,
-where the lockers come in five different sizes. 
+keeping track of the availability of each locker and how many lockers of each size
+are unused. The lockers come in five different sizes (see definition of LockerSize above). 
 -}
 data Lockers = Lockers {
   idToLocker:: Map LockerId Locker,
-  lockerSizeToLockers:: Map LockerSize [Locker]}  deriving (Eq, Show)
+  lockerSizeToLockers:: Map LockerSize (Set.Set Locker)}  deriving (Eq, Show)
 
 {- Takes a positive number n and creates n lockers with the sizes of the
 lockers being either tiny, small, medium, large, or extra large
 -}
 createNLockers:: Positive -> Lockers
 
-createNLockers numOfLockers = Lockers Map.empty Map.empty 
+-- createNLockers numOfLockers = Lockers Map.empty Map.empty 
+
+lockersToAvailabilityTracker :: [Locker] -> Map LockerId Locker
+
+lockersToAvailabilityTracker locs = Map.fromList $ map (\loc -> (uid loc, loc)) locs
 
 
+lockersToSizeTracker :: [Locker] -> Map LockerSize (Set.Set Locker)
+
+isSameSize :: Locker -> Locker -> Bool
+
+isSameSize loc1 loc2 = size loc1 == size loc2
+
+lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size 
+
+
+createNLockers numOfLockers = uncurry Lockers . (lockersToAvailabilityTracker &&& lockersToSizeTracker) . mapMaybe (uncurry toLocker) $ zip [1 .. getPositive numOfLockers] (cycle [Tiny .. ExtraLarge]) 

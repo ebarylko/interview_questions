@@ -3,6 +3,7 @@ import Test.Hspec
 import qualified Data.Map as Map
 
 import Data.Maybe (catMaybes)
+import Data.Set (singleton, union)
 
 import Data.Function ((&))
 
@@ -22,8 +23,8 @@ main = hspec $ do
                                   (toLockerIds [1 .. 6])
                                   expectedLockers),
                                  lockerSizeToLockers =
-                                 Map.fromListWith (++) $
-                                 map (\locker -> (size locker, [locker])) expectedLockers
+                                 Map.fromListWith union $
+                                 map (\locker -> (size locker, singleton locker)) expectedLockers
                                }
 
 
