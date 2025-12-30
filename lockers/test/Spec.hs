@@ -30,4 +30,8 @@ main = hspec $ do
 
     describe "When requesting a locker in a size that is no longer available" $ do
       it "A locker id is not returned" $ do
-        fmap (requestLocker Large . createNLockers) (toPositive 3) `shouldBe` Nothing
+        (lockers 3 >>= requestLocker Large . createNLockers) `shouldBe` Nothing
+
+    describe "When requesting a locker in a size that is available" $ do
+      it "A locker id corresponding to an unused locker is returned" $ do
+        pending
