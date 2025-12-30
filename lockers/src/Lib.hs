@@ -3,10 +3,10 @@ module Lib
     ) where
 
 import qualified Data.Set as Set 
-import Data.Function (on)
+import Data.Function (on, (&))
 import Data.Maybe (mapMaybe)
-import Data.Map (Map)
-import Data.List (groupBy, sortOn)
+import Data.Map (Map, lookup)
+import Data.List (groupBy, sortOn, null)
 import qualified Data.Map as Map
 import Control.Arrow ((&&&))
 
@@ -55,8 +55,8 @@ keeping track of the availability of each locker and how many lockers of each si
 are unused. The lockers come in five different sizes (see definition of LockerSize above). 
 -}
 data Lockers = Lockers {
-  idToLocker:: Map LockerId Locker,
-  lockerSizeToLockers:: Map LockerSize (Set.Set Locker)}  deriving (Eq, Show)
+  occupied:: Map LockerId Locker,
+  available:: Map LockerSize (Set.Set Locker)}  deriving (Eq, Show)
 
 {- Takes a positive number n and creates n lockers with the sizes of the
 lockers being either tiny, small, medium, large, or extra large
@@ -76,13 +76,15 @@ isSameSize = (==) `on` size
 
 lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size
 
+initLockers = Lockers Map.empty 
 
-createNLockers numOfLockers = uncurry Lockers .
-  (lockersToAvailabilityTracker &&& lockersToSizeTracker)
+createNLockers numOfLockers =  initLockers .
+  lockersToSizeTracker
   . mapMaybe (uncurry toLocker) $
-  zip [1 .. getPositive numOfLockers] (cycle allSizes)
+  lockerData
   where
     allSizes = [Tiny .. ExtraLarge]
+    lockerData = zip [1 .. getPositive numOfLockers] (cycle allSizes)
 
 {-
 Takes the size of a package, information about available lockers, and returns the id of the first locker that
@@ -90,18 +92,25 @@ is of the same size as the package. Returns none if no such lockers are availabl
 -}
 requestLocker :: LockerSize -> Lockers -> Maybe LockerId
 
-requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
- 
+--requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
+
+filterMaybe :: (a -> Bool) -> Maybe a -> Maybe a
+
+filterMaybe pred m = m >>= (\v -> if pred v then Just v else Nothing)
+
+toLockerId maybeId = (head. toLockerIds) [maybeId]
+
+requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap (const (toLockerId 3))
 
 
-data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
+-- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
 
-type LockersUpdate a = (Lockers, a)
+-- type LockersUpdate a = (Lockers, a)
 
-addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
+-- addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
 
-data LockerRemovalError = InvalidRemoval LockerId | NotInUse
+-- data LockerRemovalError = InvalidRemoval LockerId | NotInUse
 
-removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
+-- removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
 
 
