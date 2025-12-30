@@ -7,7 +7,7 @@ import Data.Set (singleton, union)
 
 import Data.Function ((&))
 
-import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, idToLocker, lockerSizeToLockers, toLockerIds, toLocker)
+import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, idToLocker, lockerSizeToLockers, toLockerIds, toLocker, requestLocker)
 
 main :: IO ()
 
@@ -29,3 +29,7 @@ main = hspec $ do
 
 
         fmap createNLockers (toPositive 6) `shouldBe` Just expected
+
+    describe "When requesting a locker in a size that is no longer available" $ do
+      it "A locker id is not returned" $ do
+        fmap (requestLocker Large . createNLockers) (toPositive 6) `shouldBe` Nothing
