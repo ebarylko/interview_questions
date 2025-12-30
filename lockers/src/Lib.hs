@@ -3,7 +3,7 @@ module Lib
     ) where
 
 import qualified Data.Set as Set 
-import Data.Function ((&))
+import Data.Function ((&), on)
 import Data.Maybe (fromJust, mapMaybe, catMaybes)
 import Data.Map (Map)
 import Data.List (cycle, sortBy, groupBy, sortOn)
@@ -67,16 +67,16 @@ createNLockers:: Positive -> Lockers
 
 lockersToAvailabilityTracker :: [Locker] -> Map LockerId Locker
 
-lockersToAvailabilityTracker locs = Map.fromList $ map (\loc -> (uid loc, loc)) locs
+lockersToAvailabilityTracker locs = Map.fromList $ map (uid &&& id) locs
 
 
 lockersToSizeTracker :: [Locker] -> Map LockerSize (Set.Set Locker)
 
 isSameSize :: Locker -> Locker -> Bool
 
-isSameSize loc1 loc2 = size loc1 == size loc2
+isSameSize = (==) `on` size
 
 lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size 
 
 
-createNLockers numOfLockers = uncurry Lockers . (lockersToAvailabilityTracker &&& lockersToSizeTracker) . mapMaybe (uncurry toLocker) $ zip [1 .. getPositive numOfLockers] (cycle [Tiny .. ExtraLarge]) 
+createNLockers numOfLockers = uncurry Lockers . (lockersToAvailabilityTracker &&& lockersToSizeTracker) . mapMaybe (uncurry toLocker) $ zip [1 .. getPositive numOfLockers] (cycle allSizes)  where allSizes = [Tiny .. ExtraLarge]
