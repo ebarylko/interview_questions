@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 import Test.Hspec
 
 import qualified Data.Map as Map
@@ -66,13 +68,11 @@ main = hspec $ do
 
         removePackage <$> validId <*> (createNLockers <$> lockers 1) `shouldBe` ( Just . Left ) NotInUse 
 
+    describe "When removing a package from the only locker that is in use" $ do
+      it "The info about the available lockers is updated to include the aforementioned locker as not being in use" $ do
+        let expectedLockers = createNLockers <$> lockers 1
+        let validId = toLockerId 1
 
-
-
-
-
-
-
-
-
-
+        removePackage <$> validId <*> (lockers 1 >>= (fmap fst . requestLocker Tiny . createNLockers))
+          `shouldBe`
+          Right . (, ())  <$> expectedLockers 

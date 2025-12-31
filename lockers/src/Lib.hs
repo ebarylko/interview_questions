@@ -95,8 +95,6 @@ type LockersUpdate a = (Lockers, a)
 -- is of the same size as the package. Returns none if no such lockers are available.
 requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
 
---requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
-
 filterMaybe :: (a -> Bool) -> Maybe a -> Maybe a
 
 filterMaybe pred m = m >>= (\v -> if pred v then Just v else Nothing)
@@ -145,7 +143,6 @@ requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterM
 
 data LockerRemovalError = InvalidRemoval LockerId | NotInUse deriving (Show, Eq)
 
-removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
 
 maybeToEither :: l -> Maybe r  -> Either l r
 
@@ -161,6 +158,8 @@ mapRight f (Right r) = Right (f r)
 lookupLocker :: LockerId -> Lockers -> Either LockerRemovalError Locker
 
 lookupLocker lId = maybeToEither NotInUse . Map.lookup lId . occupied 
+
+removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
 
 removePackage lId locs = Just lId
   & filterMaybe (largestId locs >=)
