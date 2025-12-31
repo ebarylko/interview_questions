@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size, requestLocker
+    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size, requestLocker, removePackage, LockerRemovalError(..)
     ) where
 
 import qualified Data.Set as Set 
@@ -143,8 +143,11 @@ requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterM
 
 -- addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
 
--- data LockerRemovalError = InvalidRemoval LockerId | NotInUse
+data LockerRemovalError = InvalidRemoval LockerId | NotInUse deriving (Show, Eq)
 
--- removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
+removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
+
+
+removePackage loc locs = Left (InvalidRemoval (toLockerId 3))
 
 

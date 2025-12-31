@@ -9,7 +9,7 @@ import Control.Applicative (liftA2)
 
 import Data.Function ((&))
 
-import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, toLockerIds, toLocker, requestLocker)
+import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, toLockerIds, toLocker, requestLocker, removePackage, LockerRemovalError(..))
 
 lockers = toPositive
 toLockerId = toPositive
@@ -32,17 +32,13 @@ main = hspec $ do
         fmap createNLockers (lockers 6) `shouldBe` Just expected
 
     describe "When requesting a locker in a size that is no longer available" $ do
-      it "A locker id is not returned" $ do
+      it "No locker id is returned" $ do
         (lockers 3 >>= requestLocker Large . createNLockers) `shouldBe` Nothing
 
     describe "When requesting a locker in a size that is available" $ do
       it "A locker id corresponding to an unused locker is returned and the updated locker store notes that this locker is in use" $ do
         let expectedLocker = toLocker 1 Tiny 
         let expectedId = toLockerId 1
-
-        -- let expectedLockers =  Lockers
-        -- liftA2 Map.singleton expectedId expectedLocker
-        -- Map.singleton Tiny empty
 
         let expectedLockers = do
               lId <- expectedId
@@ -51,5 +47,12 @@ main = hspec $ do
                             (Map.singleton Tiny empty)
 
         (lockers 1 >>= requestLocker Tiny . createNLockers) `shouldBe` liftA2 (,) expectedLockers expectedId
+
+    describe "When removing a locker that does not exist" $ do
+      it "An invalid locker id error is returned" $ do
+        let invalidId = toLockerId 2
+
+        liftA2 removePackage invalidId (createNLockers <$> lockers 1) `shouldBe` fmap (Left . InvalidRemoval) invalidId
+
 
 
