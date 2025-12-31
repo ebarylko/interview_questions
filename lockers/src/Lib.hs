@@ -174,10 +174,22 @@ updateOccupiedAndAvailable loc locs =
     updatedOccupied = Map.delete (uid loc) (occupied locs) 
     updatedAvailable = Map.adjust (Set.singleton loc & Set.union) (size loc) (available locs)
 
-removePackage lId locs = Just lId
-  & filterMaybe (largestId locs >=)
-  & maybeToEither (InvalidRemoval lId)
-  >>= const (lookupLocker lId locs)
+eitherFromPredicate :: (a -> Bool) -> (a -> error) -> a -> Either error a
+eitherFromPredicate p mkErr x
+  | p x       = Right x        -- If the predicate is satisfied, return Right
+  | otherwise = Left $ mkErr x -- If the predicate is not satisfied, call the function to create the left value
+
+
+
+
+
+removePackage lId locs =
+  ensureIsInTheLockerGroup lId locs
+  >>= flip ensureIsOccupied locs
   & mapRight (`updateOccupiedAndAvailable` locs)
+  where 
+    ensureIsOccupied :: LockerId -> Lockers -> Either LockerRemovalError Locker
+    ensureIsOccupied lId lockers = maybeToEither NotInUse $ Map.lookup lId (occupied lockers)
 
-
+    ensureIsInTheLockerGroup :: LockerId  -> Lockers -> Either  LockerRemovalError LockerId
+    ensureIsInTheLockerGroup lId lockers = eitherFromPredicate (<= largestId lockers) InvalidRemoval lId
