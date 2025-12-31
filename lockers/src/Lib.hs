@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size,  removePackage, LockerRemovalError(..)
+    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size,  removePackage, LockerRemovalError(..), requestLocker
     ) where
 
 import qualified Data.Set as Set 
@@ -93,7 +93,7 @@ type LockersUpdate a = (Lockers, a)
 
 -- Takes the size of a package, information about available lockers, and returns the id of the first locker that
 -- is of the same size as the package. Returns none if no such lockers are available.
--- requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
+requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
 
 --requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
 
@@ -128,14 +128,14 @@ updateAvailableLockers loc = Map.update (Just . delete loc) (size loc) . availab
 -- Takes a locker that is not in use, l, information about which lockers are available/unavailable,
 -- and updates the information to note that l is in use and cannot be used for subsequent packages.
 -- -}
--- updateLockers :: Locker -> Lockers -> Lockers
+updateLockers :: Locker -> Lockers -> Lockers
 
--- updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) 
+updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) (largestId locs)
 
--- requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
---   updateLocs
---   where
---     updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
+requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
+  updateLocs
+  where
+    updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
 
 
 -- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
@@ -158,6 +158,14 @@ mapRight :: (b -> c) -> Either a b -> Either a c
 mapRight _ (Left l) = Left l
 mapRight f (Right r) = Right (f r)
 
-removePackage lId locs = locs & occupied & Map.lookup lId & maybeToEither (InvalidRemoval lId) & (mapRight (const (locs, ())))
+lookupLocker :: LockerId -> Lockers -> Either LockerRemovalError Locker
+
+lookupLocker lId = maybeToEither NotInUse . Map.lookup lId . occupied 
+
+removePackage lId locs = Just lId
+  & filterMaybe (largestId locs >=)
+  & maybeToEither (InvalidRemoval lId)
+  >>= const (lookupLocker lId locs)
+  & mapRight (const (locs, ()))
 
 
