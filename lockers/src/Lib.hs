@@ -3,7 +3,7 @@ module Lib
     ) where
 
 import qualified Data.Set as Set 
-import Data.Set (findMin, delete)
+import Data.Set (findMin, delete, union)
 import Data.Function (on, (&))
 import Data.Maybe (mapMaybe)
 import Data.Map (Map, lookup)
@@ -161,10 +161,23 @@ lookupLocker lId = maybeToEither NotInUse . Map.lookup lId . occupied
 
 removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
 
+{-
+Takes a locker, l, information about the available lockers and those in use, and
+updates the information to note that l is no longer in use and is available
+-}
+updateOccupiedAndAvailable :: Locker -> Lockers -> LockersUpdate ()
+
+updateOccupiedAndAvailable loc locs = 
+  (Lockers updatedOccupied updatedAvailable (largestId locs),
+   ())
+  where
+    updatedOccupied = Map.delete (uid loc) (occupied locs) 
+    updatedAvailable = Map.adjust (Set.singleton loc & Set.union) (size loc) (available locs)
+
 removePackage lId locs = Just lId
   & filterMaybe (largestId locs >=)
   & maybeToEither (InvalidRemoval lId)
   >>= const (lookupLocker lId locs)
-  & mapRight (const (locs, ()))
+  & mapRight (`updateOccupiedAndAvailable` locs)
 
 

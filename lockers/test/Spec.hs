@@ -72,7 +72,8 @@ main = hspec $ do
       it "The info about the available lockers is updated to include the aforementioned locker as not being in use" $ do
         let expectedLockers = createNLockers <$> lockers 1
         let validId = toLockerId 1
+        let initialLockers = lockers 1 >>= (fmap fst . requestLocker Tiny . createNLockers)
 
-        removePackage <$> validId <*> (lockers 1 >>= (fmap fst . requestLocker Tiny . createNLockers))
+        removePackage <$> validId <*> initialLockers 
           `shouldBe`
           Right . (, ())  <$> expectedLockers 
