@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size, requestLocker, removePackage, LockerRemovalError(..)
+    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size,  removePackage, LockerRemovalError(..)
     ) where
 
 import qualified Data.Set as Set 
@@ -57,7 +57,8 @@ are unused. The lockers come in five different sizes (see definition of LockerSi
 -}
 data Lockers = Lockers {
   occupied:: Map LockerId Locker,
-  available:: Map LockerSize (Set.Set Locker)}  deriving (Eq, Show)
+  available:: Map LockerSize (Set.Set Locker),
+  largestId:: LockerId}  deriving (Eq, Show)
 
 {- Takes a positive number n and creates n lockers with the sizes of the
 lockers being either tiny, small, medium, large, or extra large
@@ -77,9 +78,9 @@ isSameSize = (==) `on` size
 
 lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size
 
-initLockers = Lockers Map.empty 
+initLockers  = flip (Lockers Map.empty) 
 
-createNLockers numOfLockers =  initLockers .
+createNLockers numOfLockers =  initLockers numOfLockers .
   lockersToSizeTracker
   . mapMaybe (uncurry toLocker) $
   lockerData
@@ -89,11 +90,10 @@ createNLockers numOfLockers =  initLockers .
 
 type LockersUpdate a = (Lockers, a)
 
-{-
-Takes the size of a package, information about available lockers, and returns the id of the first locker that
-is of the same size as the package. Returns none if no such lockers are available.
--}
-requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
+
+-- Takes the size of a package, information about available lockers, and returns the id of the first locker that
+-- is of the same size as the package. Returns none if no such lockers are available.
+-- requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
 
 --requestLocker size lockerInfo = Just $ (head . toLockerIds) [9]
 
@@ -124,18 +124,18 @@ updateAvailableLockers :: Locker -> Lockers -> Map LockerSize (Set.Set Locker)
 updateAvailableLockers loc = Map.update (Just . delete loc) (size loc) . available
 
 
-{-
-Takes a locker that is not in use, l, information about which lockers are available/unavailable,
-and updates the information to note that l is in use and cannot be used for subsequent packages.
--}
-updateLockers :: Locker -> Lockers -> Lockers
+-- {-
+-- Takes a locker that is not in use, l, information about which lockers are available/unavailable,
+-- and updates the information to note that l is in use and cannot be used for subsequent packages.
+-- -}
+-- updateLockers :: Locker -> Lockers -> Lockers
 
-updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) 
+-- updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) 
 
-requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
-  updateLocs
-  where
-    updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
+-- requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
+--   updateLocs
+--   where
+--     updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
 
 
 -- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
@@ -147,7 +147,17 @@ data LockerRemovalError = InvalidRemoval LockerId | NotInUse deriving (Show, Eq)
 
 removePackage :: LockerId -> Lockers -> Either LockerRemovalError (LockersUpdate ())
 
+maybeToEither :: l -> Maybe r  -> Either l r
 
-removePackage loc locs = Left (InvalidRemoval (toLockerId 3))
+maybeToEither err dat = case dat of
+  Nothing -> Left err
+  Just x -> Right x
+
+mapRight :: (b -> c) -> Either a b -> Either a c
+
+mapRight _ (Left l) = Left l
+mapRight f (Right r) = Right (f r)
+
+removePackage lId locs = locs & occupied & Map.lookup lId & maybeToEither (InvalidRemoval lId) & (mapRight (const (locs, ())))
 
 
