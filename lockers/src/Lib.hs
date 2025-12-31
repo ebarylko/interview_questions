@@ -3,7 +3,7 @@ module Lib
     ) where
 
 import qualified Data.Set as Set 
-import Data.Set (findMin)
+import Data.Set (findMin, delete)
 import Data.Function (on, (&))
 import Data.Maybe (mapMaybe)
 import Data.Map (Map, lookup)
@@ -105,7 +105,38 @@ toLockerId maybeId = (head. toLockerIds) [maybeId]
 
 emptyLockers = Lockers Map.empty Map.empty
 
-requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap ((,) emptyLockers . uid . findMin)  
+{-
+Takes a locker, l, information about which lockers are in use, and
+returns the updated collection of occupied lockers, now containing l
+-}
+updateOccupiedLockers :: Locker -> Lockers -> Map LockerId Locker
+
+-- updateOccupiedLockers loc locs = locs & occupied & Map.insert (uid loc) loc
+
+updateOccupiedLockers loc = Map.insert (uid loc) loc . occupied  
+
+{-
+Takes a locker, l, information about which lockers are available, and
+returns the new set of available lockers with the exclusion of l
+-}
+updateAvailableLockers :: Locker -> Lockers -> Map LockerSize (Set.Set Locker)
+
+updateAvailableLockers loc = Map.update (Just . delete loc) (size loc) . available
+
+
+{-
+Takes a locker that is not in use, l, information about which lockers are available/unavailable,
+and updates the information to note that l is in use and cannot be used for subsequent packages.
+-}
+updateLockers :: Locker -> Lockers -> Lockers
+
+updateLockers loc locs = uncurry Lockers $ (uncurry updateOccupiedLockers &&& uncurry updateAvailableLockers)  (loc, locs)
+
+requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
+  addPackage
+  where
+    addPackage = (flip updateLockers lockerInfo &&& uid) . findMin
+
 
 -- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
 
