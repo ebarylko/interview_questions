@@ -130,12 +130,12 @@ and updates the information to note that l is in use and cannot be used for subs
 -}
 updateLockers :: Locker -> Lockers -> Lockers
 
-updateLockers loc locs = uncurry Lockers $ (uncurry updateOccupiedLockers &&& uncurry updateAvailableLockers)  (loc, locs)
+updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) 
 
 requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
-  addPackage
+  updateLocs
   where
-    addPackage = (flip updateLockers lockerInfo &&& uid) . findMin
+    updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
 
 
 -- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
