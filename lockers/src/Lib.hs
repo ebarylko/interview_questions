@@ -1,5 +1,5 @@
 module Lib
-    ( createNLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size,  removePackage, LockerRemovalError(..), requestLocker
+    ( mkLockers, LockerId, Lockers(..), Locker, LockerSize(..), toPositive, toLockerIds, toLocker, size,  removePackage, LockerRemovalError(..), requestLocker
     ) where
 
 import qualified Data.Set as Set 
@@ -63,7 +63,7 @@ data Lockers = Lockers {
 {- Takes a positive number n and creates n lockers with the sizes of the
 lockers being either tiny, small, medium, large, or extra large
 -}
-createNLockers:: Positive -> Lockers
+mkLockers:: Positive -> Lockers
 
 lockersToAvailabilityTracker :: [Locker] -> Map LockerId Locker
 
@@ -80,13 +80,25 @@ lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromLi
 
 initLockers  = flip (Lockers Map.empty) 
 
-createNLockers numOfLockers =  initLockers numOfLockers .
-  lockersToSizeTracker
-  . mapMaybe (uncurry toLocker) $
-  lockerData
+getPositiveInt = unPositive
+
+mkLockers numOfLockers = Lockers noneOccupied availableLockers numOfLockers
   where
+    highestLockerId = getPositiveInt numOfLockers
     allSizes = [Tiny .. ExtraLarge]
-    lockerData = zip [1 .. getPositive numOfLockers] (cycle allSizes)
+    allIds = mapMaybe toPositive [1 .. highestLockerId]
+    noneOccupied = Map.empty
+    availableLockers = groupBySize $ zipWith Locker allIds (cycle allSizes)
+    groupBySize = foldr insertLocker Map.empty 
+    insertLocker locker = Map.insertWith Set.union (size locker) (Set.singleton locker) 
+
+-- mkLockers numOfLockers =  initLockers numOfLockers .
+--   lockersToSizeTracker
+--   . mapMaybe (uncurry toLocker) $
+--   lockerData
+--   where
+--     allSizes = [Tiny .. ExtraLarge]
+--     lockerData = zip [1 .. getPositive numOfLockers] (cycle allSizes)
 
 type LockersUpdate a = (Lockers, a)
 
@@ -181,13 +193,13 @@ eitherFromPredicate p mkErr x
 
 
 
-
-
 removePackage lId locs =
   ensureIsInTheLockerGroup lId locs
   >>= flip ensureIsOccupied locs
   & mapRight (`updateOccupiedAndAvailable` locs)
-  where 
+
+  where
+
     ensureIsOccupied :: LockerId -> Lockers -> Either LockerRemovalError Locker
     ensureIsOccupied lId lockers = maybeToEither NotInUse $ Map.lookup lId (occupied lockers)
 

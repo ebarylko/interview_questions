@@ -11,7 +11,7 @@ import Control.Applicative (liftA2)
 
 import Data.Function ((&))
 
-import Lib (createNLockers, Lockers(..), LockerSize(..),  size, toPositive, toLockerIds, toLocker,  removePackage, LockerRemovalError(..), requestLocker)
+import Lib (mkLockers, Lockers(..), LockerSize(..),  size, toPositive, toLockerIds, toLocker,  removePackage, LockerRemovalError(..), requestLocker)
 
 lockers = toPositive
 toLockerId = toPositive
@@ -34,11 +34,11 @@ main = hspec $ do
         let expected =  toExpected <$> toLockerId 6
 
 
-        fmap createNLockers (lockers 6) `shouldBe` expected
+        fmap mkLockers (lockers 6) `shouldBe` expected
 
     describe "When requesting a locker in a size that is no longer available" $ do
       it "No locker id is returned" $ do
-        (lockers 3 >>= requestLocker Large . createNLockers) `shouldBe` Nothing
+        (lockers 3 >>= requestLocker Large . mkLockers) `shouldBe` Nothing
 
     describe "When requesting a locker in a size that is available" $ do
       it "A locker id corresponding to an unused locker is returned and the updated locker store notes that this locker is in use" $ do
@@ -54,25 +54,25 @@ main = hspec $ do
 
 
 
-        (lockers 1 >>= requestLocker Tiny . createNLockers) `shouldBe` liftA2 (,) expectedLockers expectedId
+        (lockers 1 >>= requestLocker Tiny . mkLockers) `shouldBe` liftA2 (,) expectedLockers expectedId
 
     describe "When removing a locker that does not exist" $ do
       it "An invalid locker id error is returned" $ do
         let invalidId = toLockerId 2
 
-        removePackage <$> invalidId <*> (createNLockers <$> lockers 1) `shouldBe` fmap (Left . InvalidRemoval) invalidId
+        removePackage <$> invalidId <*> (mkLockers <$> lockers 1) `shouldBe` fmap (Left . InvalidRemoval) invalidId
 
     describe "When removing a package from a valid locker that is not in use" $ do
       it "An not in use error is returned" $ do
         let validId = toLockerId 1
 
-        removePackage <$> validId <*> (createNLockers <$> lockers 1) `shouldBe` ( Just . Left ) NotInUse 
+        removePackage <$> validId <*> (mkLockers <$> lockers 1) `shouldBe` ( Just . Left ) NotInUse 
 
     describe "When removing a package from the only locker that is in use" $ do
       it "The info about the available lockers is updated to include the aforementioned locker as not being in use" $ do
-        let expectedLockers = createNLockers <$> lockers 1
+        let expectedLockers = mkLockers <$> lockers 1
         let validId = toLockerId 1
-        let initialLockers = lockers 1 >>= (fmap fst . requestLocker Tiny . createNLockers)
+        let initialLockers = lockers 1 >>= (fmap fst . requestLocker Tiny . mkLockers)
 
         removePackage <$> validId <*> initialLockers 
           `shouldBe`
