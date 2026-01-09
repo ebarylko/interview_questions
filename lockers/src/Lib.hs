@@ -65,21 +65,6 @@ lockers being either tiny, small, medium, large, or extra large
 -}
 mkLockers:: Positive -> Lockers
 
-lockersToAvailabilityTracker :: [Locker] -> Map LockerId Locker
-
-lockersToAvailabilityTracker locs = Map.fromList $ map (uid &&& id) locs
-
-
-lockersToSizeTracker :: [Locker] -> Map LockerSize (Set.Set Locker)
-
-isSameSize :: Locker -> Locker -> Bool
-
-isSameSize = (==) `on` size
-
-lockersToSizeTracker = Map.fromList . zip [Tiny .. ExtraLarge]  . map Set.fromList . groupBy isSameSize  . sortOn size
-
-initLockers  = flip (Lockers Map.empty) 
-
 getPositiveInt = unPositive
 
 mkLockers numOfLockers = Lockers noneOccupied availableLockers numOfLockers
@@ -92,20 +77,11 @@ mkLockers numOfLockers = Lockers noneOccupied availableLockers numOfLockers
     groupBySize = foldr insertLocker Map.empty 
     insertLocker locker = Map.insertWith Set.union (size locker) (Set.singleton locker) 
 
--- mkLockers numOfLockers =  initLockers numOfLockers .
---   lockersToSizeTracker
---   . mapMaybe (uncurry toLocker) $
---   lockerData
---   where
---     allSizes = [Tiny .. ExtraLarge]
---     lockerData = zip [1 .. getPositive numOfLockers] (cycle allSizes)
-
 type LockersUpdate a = (Lockers, a)
 
 
 -- Takes the size of a package, information about available lockers, and returns the id of the first locker that
 -- is of the same size as the package. Returns none if no such lockers are available.
-requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
 
 filterMaybe :: (a -> Bool) -> Maybe a -> Maybe a
 
@@ -142,16 +118,12 @@ updateLockers :: Locker -> Lockers -> Lockers
 
 updateLockers loc locs = Lockers (updateOccupiedLockers loc locs) (updateAvailableLockers loc locs) (largestId locs)
 
+requestLocker :: LockerSize -> Lockers -> Maybe (LockersUpdate LockerId)
+
 requestLocker size lockerInfo = available lockerInfo & Map.lookup size & filterMaybe (not . null) & fmap
   updateLocs
   where
     updateLocs = (flip updateLockers lockerInfo &&& uid) . findMin
-
-
--- data LockerAccessError = InvalidAccess LockerId | InUse | PackageDoesNotFit
-
-
--- addPackage :: LockerSize -> Lockers -> Either LockerAccessError (LockersUpdate LockerId)
 
 data LockerRemovalError = InvalidRemoval LockerId | NotInUse deriving (Show, Eq)
 
